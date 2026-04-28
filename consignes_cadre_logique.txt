@@ -1,0 +1,242 @@
+Le composant CadreLogique actuel fonctionne et doit être CONSERVÉ.
+
+Objectif :
+L’améliorer pour en faire un outil autonome premium + ajouter une collaboration modérée via QR code, sans casser l’existant.
+
+IMPORTANT :
+- Ne pas recréer l’application
+- Ne pas supprimer les fonctionnalités existantes
+- Ne pas casser :
+  - mode assistant
+  - matrice
+  - validation
+  - export JSON
+  - build
+
+---
+
+1. AMÉLIORATION GÉNÉRALE
+
+- Nettoyer légèrement le code (factoriser si nécessaire)
+- Réduire progressivement les styles inline (sans tout refactorer)
+- Améliorer lisibilité et modularité
+- Garder le comportement actuel intact
+
+---
+
+2. AJOUT CONFIGURATION IA (comme AFOM)
+
+Créer un composant :
+AiConfigPanel.jsx
+
+Fonctionnalités :
+- dropdown provider :
+  Gemini
+  OpenAI
+  Claude (Anthropic)
+  OpenRouter
+  Mistral
+  Groq
+  Ollama / Local
+  Aucun
+
+- champ clé API
+- champ modèle optionnel
+- bouton “Tester la connexion”
+- statut visuel : non configuré / OK / erreur
+
+Stockage :
+- localStorage (V1)
+
+Contraintes :
+- ne jamais afficher la clé API en clair après saisie
+- ne pas logger la clé API
+
+---
+
+3. AJOUT CONTEXTE + DOCUMENTS
+
+Créer une section en amont :
+
+“Contexte du cadre logique”
+
+Champs :
+- nom du projet
+- contexte (textarea)
+- objectif de l’atelier
+
+Upload :
+- PDF
+- DOCX
+- XLSX
+- CSV
+- TXT
+
+Créer :
+documentParser.js
+
+Fonctions :
+- parseUploadedFile(file)
+- extraction texte simple (pdfjs, mammoth, xlsx)
+
+Comportement :
+- affichage des fichiers uploadés
+- statut : chargé / extrait / erreur
+
+---
+
+4. INTÉGRATION IA DANS LE PROCESSUS
+
+Si IA configurée :
+
+Ajouter boutons :
+
+- “Proposer objectif global”
+- “Proposer objectif spécifique”
+- “Proposer résultats”
+- “Proposer activités”
+- “Proposer indicateurs”
+- “Proposer hypothèses”
+
+Créer :
+aiAssistant.js
+
+Fonctions :
+- askAi(prompt)
+- generateLogicalFrameworkSuggestions(context)
+
+Si IA non configurée :
+- afficher “Configurer l’IA pour utiliser cette fonction”
+- ne pas bloquer l’usage manuel
+
+---
+
+5. AJOUT COLLABORATION MODÉRÉE (QR CODE)
+
+Objectif :
+Permettre aux participants de proposer du contenu sans modifier directement la matrice.
+
+Créer :
+
+ParticipantView.jsx
+ModeratorContributionsPanel.jsx
+collaborationStore.js
+
+---
+
+5.1 Génération session
+
+Créer un ID de session :
+
+generateSessionId()
+
+Créer un lien :
+
+/participant?session=XXX
+
+Afficher :
+- QR code
+- lien copiable
+
+---
+
+5.2 Interface participant
+
+Simple écran :
+
+- choix cible :
+  Objectif spécifique
+  Résultat
+  Activité
+  Indicateur
+  Source
+  Hypothèse
+
+- champ texte
+- bouton envoyer
+
+---
+
+5.3 Stockage contributions
+
+Créer un store local (V1) :
+
+collaborationStore.js
+
+Structure :
+
+{
+  id,
+  sessionId,
+  type,
+  target,
+  text,
+  status: "pending"
+}
+
+---
+
+5.4 Interface modérateur
+
+Dans CadreLogique :
+
+Ajouter panneau :
+“Contributions”
+
+Afficher :
+
+- texte
+- type
+- cible
+
+Boutons :
+
+- Accepter
+- Modifier
+- Rejeter
+
+---
+
+5.5 Comportement clé
+
+IMPORTANT :
+
+- aucune contribution ne va directement dans la matrice
+- tout passe par validation modérateur
+- après validation → insertion dans :
+  indicateurs / activités / etc.
+
+---
+
+6. CONTRAINTES
+
+- ne pas casser UI existante
+- ne pas casser logique métier
+- ne pas ajouter de backend (V1)
+- garder app fonctionnelle sans IA
+- garder app fonctionnelle sans collaboration
+- build OK obligatoire
+
+---
+
+7. RÉSULTAT ATTENDU
+
+- outil cadre logique autonome
+- IA intégrée proprement
+- contexte + documents exploitables
+- collaboration modérée fonctionnelle
+- QR code opérationnel
+- code structuré
+- npm run dev OK
+- npm run build OK
+
+---
+
+PRIORITÉ
+
+1. stabilité
+2. lisibilité
+3. modularité
+4. extensibilité
+
+Ne pas chercher la perfection visuelle, mais un rendu propre, sobre, premium et fonctionnel.
