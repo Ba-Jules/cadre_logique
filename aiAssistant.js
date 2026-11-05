@@ -28,11 +28,17 @@ export async function askAi({ provider, apiKey, model }, systemPrompt, userPromp
   }
 
   if (provider === "gemini") {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model || "gemini-1.5-flash"}:generateContent?key=${apiKey}`,
-      { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }] }) }
-    );
+    // Modèles 1.x et 2.0 retirés par Google : modèle actif par défaut, secours si retiré ou saturé.
+    const wanted = model && !/^gemini-(1\.|2\.0)/.test(model) ? model : "gemini-flash-latest";
+    let res;
+    for (const m of [...new Set([wanted, "gemini-flash-lite-latest", "gemini-2.5-flash-lite"])]) {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`,
+        { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }] }) }
+      );
+      if (![404, 429, 500, 503].includes(res.status)) break;
+    }
     if (!res.ok) throw new Error(`Gemini ${res.status}`);
     return (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text;
   }
