@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { getContributions, updateContribution, removeContribution } from "./collaborationStore.js";
+import { useEffect, useState } from "react";
+import { getContributions, updateContribution, removeContribution, subscribe, getSyncError } from "./collaborationStore.js";
 
 const TYPE_LABELS = {
   globalObjective:   "Objectif global",
@@ -25,6 +25,10 @@ export default function ModeratorContributionsPanel({ sessionId, data, onAccept 
   const [editId,   setEditId]   = useState(null);
   const [editText, setEditText]  = useState("");
   const [filter,   setFilter]    = useState("pending");
+  const [, setVersion] = useState(0);
+  useEffect(() => subscribe(() => setVersion(v => v + 1)), []);
+  useEffect(() => { const iv = setInterval(() => setVersion(v => v + 1), 3000); return () => clearInterval(iv); }, []);
+  const syncError = getSyncError();
 
   const contributions = getContributions(sessionId).filter(c =>
     filter === "all" ? true : c.status === filter
@@ -74,6 +78,11 @@ export default function ModeratorContributionsPanel({ sessionId, data, onAccept 
         </div>
       </div>
 
+      {syncError && (
+        <div style={{ background: "#7f1d1d33", border: "1px solid #fca5a544", color: "#fca5a5", borderRadius: 8, padding: 10, fontSize: 11, marginBottom: 12 }}>
+          Synchronisation : {syncError}
+        </div>
+      )}
       {contributions.length === 0 ? (
         <div style={{ background: "#1a1f2e", borderRadius: 12, padding: 40, textAlign: "center", border: "1px solid #ffffff0a", color: "#444", fontSize: 12 }}>
           {filter === "pending" ? "Aucune contribution en attente." : "Aucune contribution dans cette catégorie."}

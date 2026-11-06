@@ -10,7 +10,7 @@ import {
 } from "./aiAssistant.js";
 import { parseUploadedFile } from "./documentParser.js";
 import {
-  getSessionId, resetSession, getContributions, updateContribution,
+  getSessionId, resetSession, getContributions, updateContribution, ensureModeratorSession,
 } from "./collaborationStore.js";
 import ModeratorContributionsPanel from "./ModeratorContributionsPanel.jsx";
 
@@ -325,6 +325,9 @@ export default function CadreLogique() {
   const [sessionId,      setSessionId]      = useState(() => getSessionId());
   const [showSession,    setShowSession]    = useState(false);
   const [pendingCount,   setPendingCount]   = useState(0);
+
+  // Session partagée : ce navigateur en devient le modérateur s'il l'ouvre en premier.
+  useEffect(() => { ensureModeratorSession(sessionId); }, [sessionId]);
 
   // Polling contributions
   useEffect(() => {

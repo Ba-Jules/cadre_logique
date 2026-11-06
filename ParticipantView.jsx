@@ -27,14 +27,24 @@ export default function ParticipantView({ sessionId }) {
   const [sent,   setSent]   = useState(false);
   const [count,  setCount]  = useState(0);
 
-  const submit = () => {
-    if (!text.trim()) return;
-    saveContribution({ sessionId, type, target: target || TYPES.find(t => t.id === type)?.label, text });
-    setText("");
-    setTarget("");
-    setSent(true);
-    setCount(c => c + 1);
-    setTimeout(() => setSent(false), 2000);
+  const [error, setError] = useState("");
+  const [busy,  setBusy]  = useState(false);
+
+  const submit = async () => {
+    if (!text.trim() || busy) return;
+    setBusy(true); setError("");
+    try {
+      await saveContribution({ sessionId, type, target: target || TYPES.find(t => t.id === type)?.label, text });
+      setText("");
+      setTarget("");
+      setSent(true);
+      setCount(c => c + 1);
+      setTimeout(() => setSent(false), 2000);
+    } catch (e) {
+      setError(e.message || "Envoi impossible. Vérifiez votre connexion et réessayez.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -80,8 +90,9 @@ export default function ParticipantView({ sessionId }) {
             color: text.trim() ? "#0d1117" : "#555", cursor: text.trim() ? "pointer" : "not-allowed",
             fontSize: 13, fontWeight: 800, transition: "all 0.2s",
           }}>
-            {sent ? "Envoyée ✓" : "Envoyer la contribution"}
+            {busy ? "Envoi…" : sent ? "Envoyée ✓" : "Envoyer la contribution"}
           </button>
+          {error && <div style={{ marginTop: 10, color: "#fca5a5", fontSize: 11 }}>{error}</div>}
 
           <div style={{ marginTop: 16, background: "#ffffff06", borderRadius: 8, padding: 12, border: "1px solid #ffffff0a", fontSize: 10, color: "#555", lineHeight: 1.6 }}>
             Votre contribution sera soumise au modérateur avant d'être intégrée au cadre logique.
